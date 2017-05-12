@@ -30,48 +30,23 @@
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
         <h2 id="design">Design</h2>
-<p>This project aims to solve the <em>JavaScript Problem</em> in a way that cuts JavaScript out of the build process altogether. In fact, this project is partially inspired by the HaskellWiki article “<a href="https://wiki.haskell.org/The_JavaScript_Problem">The JavaScript Problem</a>”.  The article outlines many of the current issues with developing in JavaScript, as well as current paths of recourse that exist in a functional paradigm. In particular, in the final section of the article mentions Emscripten.</p>
+<p>This project aims to solve the <em>JavaScript Problem</em> in a way that cuts JavaScript out of the build process altogether. In fact, this project is partially inspired by the HaskellWiki article “<a href="https://wiki.haskell.org/The_JavaScript_Problem">The JavaScript Problem</a>”.  The article outlines many of the current issues with developing in JavaScript, as well as current paths of recourse that exist in a functional paradigm. In particular, in the final section of the article mentions <a href="https://github.com/kripken/emscripten">Emscripten</a>.</p>
 
 <blockquote>
   <p>“Emscripten — not Haskell→JS, but compiles LLVM/Clang output to JavaScript. Could possibly be used for GHC→LLVM→JS compiling, which I tried, and works, but would have to also compile the GHC runtime which is not straight-forward (to me) for it to actually run.”</p>
 </blockquote>
 
-<p>This helped inspire the initial design of a viable pathway from Haskell code to working WebAssembly through LLVM. The final product of this project will be a simple-to-use tool that consumes Haskell Code and produces runnable WebAssembly.</p>
+<p>This helped inspire the initial design of a viable pathway from Haskell code to working <a href="http://webassembly.org/">WebAssembly</a> through <a href="http://llvm.org/">LLVM</a> using <a href="https://nixos.org/nix/">Nix</a>. The final product of this project will be a simple-to-use tool that consumes Haskell code and produces runnable WebAssembly.</p>
 
-<p>In producing such a tool, this project will accomplish several tasks. It will create an altered version of the current GHC LLVM</p>
+<p>LLVM is a sensible stepping stone for this project for several reasons. For one, LLVM is already the target of several widely used compilation tools. As such, many optimizations have been applied to the LLVM toolchain. Bringing LLVM into the project allows it to take advantage of all the optimizations. Furthermore, there already exist tools in the LLVM ecosystem for <a href="https://reviews.llvm.org/rL246814">compiling LLVM to WebAssembly</a>. Finally, GHC already has a working <a href="https://ghc.haskell.org/trac/ghc/wiki/Commentary/Compiler/Backends/LLVM/Design">LLVM backend</a>. This solidifies LLVM as a path of least resistance for this project. Currently, LLVM code produced by the GHC LLVM backend cannot be directly translated into WebAssembly with the available tools due to some compatibility issues. Making an altered version of the LLVM backend that produces code that is compatible with LLVM-to-WebAssembly compilation available as a part of GHC will be a task that is accomplished within the context of this project.</p>
 
-<p>The seemingly daunting task of compiling the runtime to WebAssembly can be simplified with the use of modern tools available in the GHC, LLVM, and WebAssembly Ecosystems.</p>
-<h2 id="notes">notes</h2>
-<p>ghc makes llvm<br />
-we have nix for llvm -&gt; WASM
-emscripten has some tools we’ll reuse, not use directly
-llvm backend should cover substantial portion of rts<br />
-Nixpkgs w/john ericson’s updates will help with building GHC with this purpose</p>
+<p>Drawing together separately developed tools into a single cohesive product is often a fragile process that yields brittle results. Dependency management, and build processes need to be handled with care. The Nix language and ecosystem exist to handle these tasks with strength and reliability. Compiling GHC-produced LLVM to WebAssembly with the available LLVM tools is likely to be a sensitive process. Refining this process and capturing that logic via Nix will be done as a part of this project.</p>
 
-<ol>
-  <li>why llvm</li>
-  <li>why nix<br />
-reliability &amp; reproducibility<br />
-<em>easy for end users (build nightmares) (give them simple commands for using our work)</em></li>
-  <li>rts?</li>
-</ol>
+<p>Producing sensible WebAssembly from Haskell code is not enough to fulfill the goals of this project. The produced WebAssembly code will be unable to run in the abscence of a proper runtime. Specifically, the <a href="https://ghc.haskell.org/trac/ghc/wiki/Commentary/Rts">GHC RTS</a> will need to be compiled to WebAssembly. The RTS exists as a combination of C and Cmm code within the GHC code base. The GHC LLVM backend already has the ability to take in Cmm code and produce LLVM, so the altered backend will serve double duty by aiding this process. A reliable C to LLVM compiler, Clang, already exists as part of the LLVM ecosystem. In addition, Emscripten furnishes implementations of several libraries, such as libc, that may be of use in this process. Leveraging these tools should make compiling the RTS to LLVM (and then WebAssembly) a far less daunting task.</p>
 
-<h2 id="pasted-shit">Pasted Shit</h2>
-<p>This project aims to create a WebAssembly backend for GHC by leveraging the existing LLVM backend and the Nix build system. WebAssembly makes for a desirable target because of its speed and size. As browser implementations come up to specification, it should offer near native code execution speed. Furthermore, code generated by such a backend should be much smaller than that generated by GHCJS, improving load times. As an added bonus, WebAssembly would serve as a suitable compilation target for non-web-related projects.
-This project consists of three main phases. The first of which is extending GHC. This would consist of defining a WebAssembly target in GHC for emitting LLVM, as well as finalizing the necessary nix expressions to build this extended version of GHC. The second phase would consist of ensuring the WebAssembly generated by LLVM is valid and callable from the browser. Two major potential issues are LLVM’s support for tailcalls and the GHC calling convention. It’s unclear whether it properly handles these things when targeting WebAssembly; WebAssembly doesn’t implement tailcalls, and the GHC calling convention is very unusual. The final phase is porting the runtime system. Parts of the RTS written in C may, with the aid of LLVM compilation tools, work without much additional work. Various other components, like syscalls, will need special attention.
-The minimum viable product for this project is a version of GHC that can produce valid WebAssembly that can be run in a browser. It will support an unthreaded runtime, awaiting WebAssembly’s threading implementation for the threaded runtime. The C FFI will be implemented via the same means as the C FFI with a native backend. Only essential syscalls will be implemented. This should provide enough functionality to get started with Haskell on WebAssembly.</p>
+<p>A custom build process that builds GHC for the purpose of this project will need to be designed. This process can be encoded with Nix. In fact, <a href="https://github.com/Ericson2314">John Ericson</a> has already done significant work related to cross compilation with GHC using Nix. His work will aid in this cause, and is available via <a href="http://nixos.org/nixpkgs/">Nixpkgs</a>.</p>
 
-<p>Hello,
-I’ve been discussing a project with a candidate student (Michael Vogelsang) for the 2017 Haskell Summer of Code, and would like to be his mentor. The project aims to add a WebAssembly backend to GHC, using existing infrastructure in the LLVM backend and in Nixpkgs. A WebAssembly backend would have a number of advantages.
-WebAssembly is, in principle, much faster than JavaScript. Those of us who compile Haskell to JS with GHCJS would see a substantial performance benefit in browser applications. It may take some time for browser implementations to catch up to this promise of performance, but I’m confident it will be realized in the long term.
-The size of generated code will likely be much smaller than that of GHCJS. WebAssembly is a compact binary format optimized for fast parsing. This can noticeably improve load times.
-Since WebAssembly is designed to be independent of browsers, this backend can serve as a fallback target for GHC to target any platform which can run a WebAssembly VM.
-We have a few resources available to us that will help this project a great deal.
-Newer versions of LLVM have an experimental WebAssembly backend included. With GHC’s LLVM backend, we aim to reuse existing code generation and to avoid writing a new RTS from scratch. Using the LLVM backend also enables the C FFI, the lack of which has been a major pain with GHCJS.
-John Ericson is an expert in cross compiling with Nixpkgs. He has volunteered some of his time to help us use a new cross compiling infrastructure he recently developed for Nixpkgs for our build systems.
-Emscripten has some tools we will be able to use, such as its implementation of libc.
-We’ve already begun some of the work. We’ve secured a build server for hosting and caching nix builds, which will save time as we frequently rebuild large projects like Clang and GHC. We’ve done a good amount of research on how GHC works and how to build it for cross compiling. We’ve also already started building the necessary Nix expressions for cross compiling with LLVM.
-Michael is a uniquely positioned student to take on this project. He has recently completed an independent study producing learning materials on Haskell for the University of Louisville. He is a motivated student who could learn a lot from this opportunity to contribute to the Haskell community.</p>
+<p>This project will expose a simple-to-use interface to end users. Encoding the logic necessary to use the results of this project properly should be possible via Nix. The necessary calls to Nix can then be written into simple bash files such that usage of this project requires no knowledge of its inner workings or the tools it uses. In this manner, the end users of this project should be able to compile Haskell code to runnable WebAssembly with only a simple command.</p>
 
       </section>
     </div>
