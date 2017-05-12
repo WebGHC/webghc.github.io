@@ -1,3 +1,6 @@
+---
+title: A Gentle Introduction
+---
 ## A Gentle Introduction
 _In this post we'll explore what WebAssembly is, and why we want to bring Haskell to it._
 
