@@ -1,5 +1,5 @@
 ## Design
-This project aims to solve the _JavaScript Problem_ in a way that cuts JavaScript out of the build process altogether. In fact, this project is partially inspired by the HaskellWiki article "[The JavaScript Problem](https://wiki.haskell.org/The_JavaScript_Problem)".  The article outlines many of the current issues with developing in JavaScript, as well as current paths of recourse that exist in a functional paradigm. In particular, in the final section of the article mentions [Emscripten](https://github.com/kripken/emscripten).
+This project is partially inspired by the HaskellWiki article "[The JavaScript Problem](https://wiki.haskell.org/The_JavaScript_Problem)". This project aims to solve the _JavaScript Problem_ in a way that cuts JavaScript out of the build process altogether. The article outlines many of the current issues with developing in JavaScript, as well as current paths of recourse that exist in a functional paradigm. In particular, in the final section of the article mentions [Emscripten](https://github.com/kripken/emscripten).
 
 >"Emscripten — not Haskell→JS, but compiles LLVM/Clang output to JavaScript. Could possibly be used for GHC→LLVM→JS compiling, which I tried, and works, but would have to also compile the GHC runtime which is not straight-forward (to me) for it to actually run."  
 
