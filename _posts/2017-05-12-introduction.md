@@ -1,5 +1,6 @@
 ---
 title: A Gentle Introduction
+date: 2017-05-12 00:00:00
 ---
 ## A Gentle Introduction
 _In this post we'll explore what WebAssembly is, and why we want to bring Haskell to it._
@@ -30,5 +31,3 @@ So WebAssembly a fast, low-level standard. Great! This means it's perfect for bu
 [Haskell](https://www.haskell.org/) is a mature, modern, statically-typed, purely-functional language with a fully-featured type system. As such, it is more conducive to the creation of more composable code that is easier to reason about. Due to its explicit handling of effects, many parts of a Haskell program can be meaningfully parallelized for free; As a matter of fact, the language comes with a "light-weight concurrency library containing a number of useful concurrency primitives and abstractions". As a language, it helps solve many of the _Javascript problems_ that WebAssembly does not directly address.
 
 So Haskell is a fantastic language that is built for handling heavy-duty work and is designed to produce more reasonable code. Awesome. We've got Haskell and we've got WebAssembly. We just need a way to compile Haskell to WebAssembly. That is the goal of the WebGHC project.  
-
-_In the next post, we'll go over the project strategy and structure a little more, as well as introduce a key tool that'll help make it all work, Nix._
