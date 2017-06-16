@@ -6,7 +6,7 @@ date: 2017-05-12 00:00:01
 _In this post we'll introduce this miniseries, run some Haskell code manually, link some object files manually, and see what we can learn about GHC's inner workings from there._
 
 ### Introduction
-Before diving into full on research of the inner workings of GHC and other topics necessary to the completion of this project, it makes sense to take some time to familiarize ourselves with the tools we plan on using. In particular, how to use them on the most basic way. It doesn't make sense to try and develop software on top of tools we haven't used. Furthermore, we stand to gain quite a bit of practical knowledge in taking this baby step. The results of these exercises will be referenced (and further discussed) in several future blog posts.  
+Before diving into full on research of the inner workings of GHC and other topics necessary to the completion of this project, it makes sense to take some time to familiarize ourselves with the tools we plan on using. It doesn't make sense to try and develop software on top of tools we haven't used. In particular, a more exacting examination of the more mundane usages of these tools is in order. We stand to gain quite a bit of practical knowledge in taking this baby step. The results of these exercises will be referenced (and further discussed) in several future blog posts.  
 
 Since this project's crucial functionality lives at a relatively low-level, we will be focusing on the low-level tooling and concepts. If you're not really familiar with what compilers, assemblers, and linkers are, how they interact, or what they each generally produce, you'll want to take some time to read up on them now.
 
