@@ -18,8 +18,8 @@ However, this is a non-trivial task as that Webassembly is young and just can't 
   
 [GNU libc](https://www.gnu.org/software/libc/manual/) is about a half a million lines of code on its own. Granted, it is built to minimize assumptions about the platform it's running on in order to maximize portability and that comes with some overhead. There are more lightweight solutions out there.  
 [Musl libc](https://www.musl-libc.org/) was built with simplicity in mind. It sits at ~60,000 lines of code and is still fully featured.  
-We just need one of these to successfully compile to WebAssembly. As long as one does, the generated library will be portable. With either library, doing all of this on our own would be well...  
-A lot to manage.  
+We just need one of these to successfully compile to WebAssembly. As long as one does, the generated library will be portable.  
+With either library, doing all of this on our own would be...  Daunting.  
 If we could find anyone else who has worked on something similar and re-use an appreciable part of their work it would make this a much less daunting task.
 
 ### A Sledgehammer 
