@@ -3,7 +3,7 @@ title: If you build it...
 date: 2017-07-16 00:00:01
 ---
 ## If you build it...
-_GHC is directly dependent on some 'commonly available system resources'. A big one of which is libc. We'll go over building libc, and making the process repeatable with nix_
+_GHC is directly dependent on some 'commonly available system resources'. A big one of which is libc. We'll go over building libc, and making the process repeatable with nix_  
 
 ### A Tough Nut to Crack
 libc is enormous. It provides ~1300 functions for helping progamming languages do meaningful work. It provides an interface for managing memory (malloc, free, etc.), string manipulation & analysis (strcpy, strcmp), efficient mathematics, and thread management.  
@@ -108,3 +108,104 @@ clang-6.0 -cc1 -triple x86_64-unknown-linux-gnu -emit-obj -disable-free -disable
 The code that includes this python is up at this commit of the [wasm-syslib-builder](https://github.com/WebGHC/wasm-syslib-builder/tree/541eb4abf0bc356d152cc40860f3982db06aefc1) repo.  
 
 ### MAKEing Everything Easier
+While the Python script works, we decided it would be better to use more traditional build tools. Following a standard build process makes encoding the build with Nix easier.  
+We translated our simplified Python into a Makefile. We then put together a simple setup with `autoconf` so that our process could follow the standard `./configure --prefix <installDir>`, `make`, `make install` recipe.  
+
+Our `configure.ac` ended up like so. 
+```autoconf
+AC_INIT([wasmlibc], [0.5], [mvogelsang@rocketmail.com])
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
+```
+When `autoconf` is run it generates a `./configure` script. The generated script will simply replace every instance of `@prefix@` in the `Makefile.in` with the `prefix` that was supplied to `./configure`. The result of this operation is simply copied into a local `Makefile`.  
+
+Our `Makefile.in` ended up like this.
+```Make
+prefix := @prefix@
+.DEFAULT_GOAL := all
+
+PATHTOMUSLSRC := ./emscripten/system/lib/libc/musl/src
+MUSLMODULES := $(shell find $(PATHTOMUSLSRC) -mindepth 1 -maxdepth 1 -type d)
+
+IGNOREDMODULES := ipc passwd thread signal sched ipc time linux aio exit legacy mq process search setjmp env ldso conf
+IGNOREDFILES := getaddrinfo.c getnameinfo.c inet_addr.c res_query.c gai_strerror.c proto.c gethostbyaddr.c gethostbyaddr_r.c gethostbyname.c gethostbyname2_r.c gethostbyname_r.c gethostbyname2.c usleep.c alarm.c syscall.c _exit.c
+
+PROCESSEDMODULES := $(filter-out $(addprefix %/, $(IGNOREDMODULES)), $(MUSLMODULES))
+CANDIDATEFILES := $(foreach module, $(PROCESSEDMODULES), $(shell find $(module) -name '*.c'))
+PATHTODLMALLOC := ./emscripten/system/lib/dlmalloc.c
+WASMLIBCFILES := $(PATHTODLMALLOC) $(filter-out $(addprefix %/, $(IGNOREDFILES)), $(CANDIDATEFILES))
+
+WASMLIBCNAMES := $(notdir $(basename $(WASMLIBCFILES)))
+WASMOBJS := $(addprefix obj/, $(addsuffix .o, $(WASMLIBCNAMES)))
+
+vpath %.c $(sort $(dir $(WASMLIBCFILES)))
+
+obj lib:
+	mkdir $@
+
+$(WASMOBJS): obj/%.o: %.c | obj
+	@$$CC -I ./emscripten/system/lib/libc/musl/src/internal -Os \
+	-Werror=implicit-function-declaration -Wno-return-type -Wno-parentheses \
+	-Wno-ignored-attributes -Wno-shift-count-overflow -Wno-shift-negative-value \
+	-Wno-dangling-else -Wno-unknown-pragmas -Wno-shift-op-parentheses -D __EMSCRIPTEN__ \
+	-Wno-string-plus-int -Wno-logical-op-parentheses -Wno-bitwise-op-parentheses \
+	-Wno-visibility -Wno-pointer-sign -isystem ./emscripten/system/include \
+	-isystem ./emscripten/system/include/libc -isystem ./emscripten/system/lib/libc/musl/arch/emscripten \
+	-c -o $@ $<
+
+lib/libc.a: $(WASMOBJS) | lib
+	@$$AR rcs $@ $(WASMOBJS)
+
+all: lib/libc.a
+
+clean:
+	rm -rf lib
+	rm -rf obj
+
+install: lib/libc.a
+	mkdir $(prefix)/lib
+	mkdir $(prefix)/include
+	cp ./lib/libc.a $(prefix)/lib/
+	cp ./emscripten/system/include/emscripten.h $(prefix)/include/
+	cp -R ./emscripten/system/include/libc/* $(prefix)/include/
+	rm $(prefix)/include/bits
+	cp -R ./emscripten/system/include/compat/ $(prefix)/include/
+	cp -R ./emscripten/system/include/emscripten $(prefix)/include/
+	cp -R ./emscripten/system/lib/libc/musl/arch/emscripten/* $(prefix)/include/
+
+.PHONY: all clean install
+```
+
+### Nixing inconsistency
+We needed to make our build repeatable. So, we built a nix derivation describing the build. Since we used a 'standard' build process, making the derivation was easy.    
+Here's our `musl-wasm32.nix` from our [wasm-cross](https://github.com/WebGHC/wasm-cross) repo.  
+```Nix
+{ stdenv, lib, buildPackages, fetchgit }:
+
+stdenv.mkDerivation {
+  name = "musl";
+  src = fetchgit {
+    url = "https://github.com/WebGHC/wasm-syslib-builder";
+    rev = "ae1446d70619e6b5f99fa49fe34cc23264d46d7e";
+    sha256 = "1zp43pf5yg2vrc1c3w29vfv2xrjk788h58lfqxf0ww78ifpr6kal";
+  };
+  
+  hardeningDisable = ["pic"];
+}
+```
+This file is pretty simple. It makes a derivation from the source obtained by fetchgit (a convenience function furnished by Nix). Fetchgit simply pulls down the code from the specified repo at the specified revision and makes sure everything matches up with the supplied sha256 hash. At this point, Nix notices that we have a `configure` script and a `Makefile.in`, and it assumes our project follows the standard `./configure`, `make`, `make install` process.  
+The only other thing going on here is `hardeningDisable = ["pic"]`. All this line is doing is forcing our Nix wrappers around clang to not tell it to use 'position independent code'. The setup for dynamically linking code in WebAssembly is still fuzzy, and LLVM just doesn't support it at all. We need to make sure `-fPIC` isn't supplied to the compiler or it'll error. Currently, it is supplied by default, hence our need to make this specification in our Nix expression. 
+
+### Finishing Up
+If you want to libc build for yourself...  
+1. Clone [wasm-cross](https://github.com/WebGHC/wasm-cross)
+2. Clone [wasm-syslib-builder](https://github.com/WebGHC/wasm-syslib-builder)
+3. cd into `wasm-cross`
+4. run `nix-shell -A nixpkgsWasm.buildPackages.musl-cross`
+5. cd into `wasm-syslib-builder`
+6. `./configure --prefix <path to your desired install>`
+7. `make`
+8. `make install`
+
+And That's it!  
+Up next we'll take a look into compiling some C code to WebAssembly and running it. 
