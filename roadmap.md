@@ -1,4 +1,4 @@
-<a href="/">&lt;home</a>
+<a href="/">&lt; home</a>
 ## Roadmap
 _This page is a work-in-progress and will be updated as the project develops._
 ~~_For now, the calendar will just reflect dates for the 2017 Summer Term in accordance with the Haskell Summer of Code schedule (which this project will hopefully be a part of)_~~
