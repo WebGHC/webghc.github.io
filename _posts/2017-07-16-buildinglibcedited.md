@@ -14,7 +14,7 @@ As a sanity check, running `$CC $CFLAGS -v` should yield several lines of output
 clang version 6.0.0 
 Target: wasm32-unknown-unknown-wasm
 ```
-Go ahead and set the environment archiver with `export AR="llvm-ar "` and set the environment linker with `export LD="lld"`. Set linker default flags with `export LDFLAGS="-flavor wasm -entry=main --gc-sections"`
+Go ahead and set the environment archiver with `export AR="llvm-ar"` and set the environment linker with `export LD="lld"`. Set linker default flags with `export LDFLAGS="-flavor wasm -entry=main --gc-sections"`
 You'll also need to know where your `llvm-config` binary lives. It should be in the bin directory of the location LLVM was installed to. `export LLVM_CONFIG=$(which llvm-config)`
 For convenience, `export TARGET_TRIPLE=wasm32-unknown-unknown-wasm` (and yes that is technically a quadruple).
 Finally, we're going to be building several projects. To make things easier, make a project directory called `wasmbuilds` and `export WASMBUILDS=<pathtowasmbuilds>/wasmbuilds`.  
@@ -35,11 +35,11 @@ Emscripten exists as a fairly massive python codebase, and wasn't really designe
 #### steps
 executing the following commands should build libc to wasm without having to install Nix, or clone any of our repos.
 1. `cd $WASMBUILDS`
-2. `mkdir libc && mk dir libcbuilder` - libc is where the headers and libc.a will end up
+2. `mkdir libc && mkdir libcbuilder` - libc is where the headers and libc.a will end up
 3. `cd libcbuilder`
 4. `curl -L https://github.com/kripken/emscripten/archive/6dc4ac5f9e4d8484e273e4dcc554f809738cedd6.tar.gz | tar zx` - we don't use emscripten as a dependency, but we do steal some of its files to build libc
 5. `mv emscripten-6dc4ac5f9e4d8484e273e4dcc554f809738cedd6 emscripten` - rename the repo to something reasonable
-5. `git clone git@gist.github.com:38b603136e59d07b87b9654869d9f45d.git && mv 38b603136e59d07b87b9654869d9f45d Makefile` - This is a slightly adjusted Makefile from the WebGHC wasm-syslib-builder repo. It just hardcodes the installation prefix to be based off of `$WASMBUILDS` and adds an explicit reference to `$CFLAGS`. 
+5. `git clone git@gist.github.com:38b603136e59d07b87b9654869d9f45d.git && mv 38b603136e59d07b87b9654869d9f45d/Makefile ./Makefile && rm -rf 38b603136e59d07b87b9654869d9f45d` - This is a slightly adjusted Makefile from the WebGHC wasm-syslib-builder repo. It just hardcodes the installation prefix to be based off of `$WASMBUILDS` and adds an explicit reference to `$CFLAGS`. 
 6. `make` - builds the dependencies we want. If you don't care about watching things happend sequentially, and want things to go faster you can add the `-j <number of threads you desire> ` option.
 7. `make install` - puts the libc headers and archive in the libc directory
 8. `export CFLAGS=$CFLAGS -I $WASMBUILDS/libc/include` - add the libc headers to CC's search path. 
