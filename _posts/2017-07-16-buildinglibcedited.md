@@ -14,7 +14,7 @@ As a sanity check, running `$CC $CFLAGS -v` should yield several lines of output
 clang version 6.0.0 
 Target: wasm32-unknown-unknown-wasm
 ```
-Go ahead and set the environment archiver with `export AR="llvm-ar"` and set the environment linker with `export LD="lld"`. Set linker default flags with `export LDFLAGS="-flavor wasm -entry=main --gc-sections"`
+Go ahead and set the environment archiver with `export AR="llvm-ar"` and set the environment linker with `export LD="lld"`. Set linker default flags with `export LDFLAGS="-flavor wasm"`
 You'll also need to know where your `llvm-config` binary lives. It should be in the bin directory of the location LLVM was installed to. `export LLVM_CONFIG=$(which llvm-config)`
 For convenience, `export TARGET_TRIPLE=wasm32-unknown-unknown-wasm` (and yes that is technically a quadruple).
 Finally, we're going to be building several projects. To make things easier, make a project directory called `wasmbuilds` and `export WASMBUILDS=<pathtowasmbuilds>/wasmbuilds`.  
@@ -37,13 +37,13 @@ executing the following commands should build libc to wasm without having to ins
 1. `cd $WASMBUILDS`
 2. `mkdir libc && mkdir libcbuilder` - libc is where the headers and libc.a will end up
 3. `cd libcbuilder`
-4. `curl -L https://github.com/kripken/emscripten/archive/6dc4ac5f9e4d8484e273e4dcc554f809738cedd6.tar.gz | tar zx` - we don't use emscripten as a dependency, but we do steal some of its files to build libc
-5. `mv emscripten-6dc4ac5f9e4d8484e273e4dcc554f809738cedd6 emscripten` - rename the repo to something reasonable
+4. `curl -L https://github.com/kripken/emscripten/archive/3bfcf9cdf9cda7b6fc0a12f20a0103beee5b505a.tar.gz | tar zx` - we don't use emscripten as a dependency, but we do steal some of its files to build libc
+5. `mv emscripten-3bfcf9cdf9cda7b6fc0a12f20a0103beee5b505a emscripten` - rename the repo to something reasonable
 5. `git clone git@gist.github.com:38b603136e59d07b87b9654869d9f45d.git && mv 38b603136e59d07b87b9654869d9f45d/Makefile ./Makefile && rm -rf 38b603136e59d07b87b9654869d9f45d` - This is a slightly adjusted Makefile from the WebGHC wasm-syslib-builder repo. It just hardcodes the installation prefix to be based off of `$WASMBUILDS` and adds an explicit reference to `$CFLAGS`. 
 6. `make` - builds the dependencies we want. If you don't care about watching things happend sequentially, and want things to go faster you can add the `-j <number of threads you desire> ` option.
 7. `make install` - puts the libc headers and archive in the libc directory
-8. `export CFLAGS=$CFLAGS -I $WASMBUILDS/libc/include` - add the libc headers to CC's search path. 
-9. `export LDFLAGS=$LDFLAGS -L $WASMBUILDS/libc/lib` - add libc.a's location to the linker search path
+8. `export CFLAGS=$CFLAGS"-I $WASMBUILDS/libc/include"` - add the libc headers to CC's search path. 
+9. `export LDFLAGS=$LDFLAGS" -L $WASMBUILDS/libc/lib"` - add libc.a's location to the linker search path
 
 ### Compiler-rt
 #### strategy
@@ -57,7 +57,7 @@ executing the following commands should build libc to wasm without having to ins
 5. `cmake -DLLVM_CONFIG_PATH=$LLVM_CONFIG -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=$TARGET_TRIPLE -DCOMPILER_RT_BAREMETAL_BUILD=TRUE -DCOMPILER_RT_EXCLUDE_ATOMIC_BUILTIN=TRUE -DCMAKE_C_COMPILER_WORKS=1 --target ../crtbuilder/lib/builtins` - compiler-rt uses cmake, and specifies that you not try to build it from within it's own directory, so we call cmake from the destination directory
 6. `make`
 7. `mv ./lib/*/libclang_rt.builtins-*.a ./lib/libcompiler_rt.a` - move the archive somewhere we'd expect it, and rename it to something more reasonable
-8. `export LDFLAGS=$LDFLAGS -L $WASMBUILDS/compiler-rt/lib` - add the compiler-rt archive's home to LDFLAGS
+8. `export LDFLAGS=$LDFLAGS" -L $WASMBUILDS/compiler-rt/lib"` - add the compiler-rt archive's home to LDFLAGS
 
 ### Build and Run Something
 ### strategy
@@ -81,28 +81,32 @@ We'll do a simple example. If you have something like hserv, or [darkhttpd](http
 4. copy the following into a file named `wasm.js`
     ```Javascript
 		var importObject = {
-		    "env": {
-		        "__eqtf2": () => {throw "NYI"},
-		        "__extenddftf2": () => {throw "NYI"},
-		        "__fixtfsi": () => {throw "NYI"},
-		        "__fixunstfsi": () => {throw "NYI"},
-		        "__floatsitf": () => {throw "NYI"},
-		        "__floatunsitf": () => {throw "NYI"},
-		        "getenv": () => {throw "NYI"},
-		        "__lock": () => {throw "NYI"},
-		        "__map_file": () => {throw "NYI"},
-		        "__netf2": () => {throw "NYI"},
-		        "sbrk": () => {throw "NYI"},
-		        "__stack_chk_fail": () => {throw "NYI"},
-		        "__stack_chk_guard": () => {throw "NYI"},
-		        "__syscall140": () => {throw "NYI"},
-		        "__syscall146": () => {throw "NYI"},
-		        "__syscall6": () => {throw "NYI"},
-		        "__syscall91": () => {throw "NYI"},
-		        "__unlock": () => {throw "NYI"},
-		        "__unordtf2": () => {throw "NYI"},
-		    }
+				    "env": {
+				        "__eqtf2": () => {throw "NYI"},
+				        "__extenddftf2": () => {throw "NYI"},
+				        "__fixtfsi": () => {throw "NYI"},
+				        "__fixunstfsi": () => {throw "NYI"},
+				        "__floatsitf": () => {throw "NYI"},
+				        "__floatunsitf": () => {throw "NYI"},
+				        "getenv": () => {throw "NYI"},
+				        "__lock": () => {throw "NYI"},
+				        "__map_file": () => {throw "NYI"},
+				        "__netf2": () => {throw "NYI"},
+				        "sbrk": () => {throw "NYI"},
+				        "__stack_chk_fail": () => {throw "NYI"},
+				        "__stack_chk_guard": () => {throw "NYI"},
+				        "__syscall140": () => {throw "NYI"},
+				        "__syscall146": () => {throw "NYI"},
+				        "__syscall6": () => {throw "NYI"},
+				        "__syscall91": () => {throw "NYI"},
+				        "__unlock": () => {throw "NYI"},
+								"__unordtf2": () => {throw "NYI"},
+								"__multf3": () => {throw "NYI"},
+								"__addtf3": () => {throw "NYI"},
+								"__subtf3": () => {throw "NYI"}
+				    }
 		};
+				
 		function fetchAndInstantiate(url, importObject) {
 		  return fetch(url).then(response =>
 		    response.arrayBuffer()
@@ -112,13 +116,15 @@ We'll do a simple example. If you have something like hserv, or [darkhttpd](http
 		    results.instance
 		  );
 		}
+
 		fetchAndInstantiate("main", importObject).then(function(instance) {
-		    console.log(instance.exports.main());
+		    console.log(instance.exports);
+				console.log(instance.exports.main());				
 		});
     ```
 5. make a file `main.c` with a `main` function that returns an int and takes no arguments. You can import libc headers! (make your first one simply `return 1` to make sure everything is working. You can change this and recompile as you wish)
 6. `$CC $CFLAGS -c main.c -o main.o`
-7. `$LD $LDFLAGS --allow-undefined --verbose main.o -lc -lcompiler_rt -o main` - `--allow-undefined` just helps make this work easily for now. Eventually we'll want to figure out which symbols we expect to be undefined, list them in a file, and use `--allow-undefined-file=<value>`. We'll expect to define these symbols using javascript in the Module instantiation process, but more on this later.
+7. `$LD $LDFLAGS main.o -o main -lc -lcompiler_rt -error-limit=0 -allow-undefined -entry=main` - The `-allow-undefined` just helps make this work easily for now. Eventually we'll want to figure out which symbols we expect to be undefined, list them in a file, and use `--allow-undefined-file=<value>`. We'll expect to define these symbols using javascript in the Module instantiation process, but more on this later.
 8. spin up your lightweight server in this directory. If you have darkhttpd it's just `darkhttpd .`. hserv is very similar.
 9. open a browser and navigate to the local site! darkhttpd's should be `0.0.0.0:8080`. open developer tools, and refresh the page (I've rarely had errors on initial load that went away upon refresh). You should see the value returned by main in the console.
 10. alter `main.c`, recompile, and relink to your desire
