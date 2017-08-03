@@ -2,12 +2,13 @@
 title: If you build it... (revised 25 July 2017)
 date: 2017-07-25 00:00:01
 ---
-## If you build it... (revised 25 July 2017)
+## If you build it... (revised 3 August 2017)
 _GHC is directly dependent on some 'commonly available system resources'. Two of them are compiler-rt and libc. We'll cover how to build them to WebAssembly._  
 _With these two libraries available, we should be able to compile C code to runnable WebAssembly. We'll go over what the process looks like to compile C code and run it in the browser._
 
 ### Setup
-To be able to do any of this, you'll need a working build of a modern version of Clang (We're using Clang 6). If you don't have one, it's [easy enough to build Clang/LLVM yourself](https://clang.llvm.org/get_started.html). Once you've got those built, make sure to add the `bin` directories of LLVM and Clang to your `PATH`. clang, llvm-ar, lld, and llvm-config should all be able to be found using `which`.  
+To be able to do any of this, you'll need a working build of a modern version of Clang (We're using Clang 6). If you don't have one, it's [easy enough to build Clang/LLVM yourself](https://llvm.org/docs/GettingStarted.html). You should follow the normal procedure with one exception; you'll actually need to build [WebAssembly's fork of lld](https://github.com/WebAssembly/lld) instead of the mainstream LLVM one as of right now. So clone that version into the `llvm/tools` instead of LLVM's.  
+Once you've got those built, make sure to add the `bin` directories of LLVM and Clang to your `PATH`. clang, llvm-ar, lld, and llvm-config should all be able to be found using `which`.  
 Set clang to be your environment's C compiler with `export CC="clang"`. Set default flags with `export CFLAGS="-target wasm32-unknown-unknown-wasm -nostdinc -nodefaultlibs -nostartfiles"`.  
 As a sanity check, running `$CC $CFLAGS -v` should yield several lines of output, the first of which should look like this...  
 ```bash
@@ -124,7 +125,7 @@ We'll do a simple example. If you have something like hserv, or [darkhttpd](http
     ```
 5. make a file `main.c` with a `main` function that returns an int and takes no arguments. You can import libc headers! (make your first one simply `return 1` to make sure everything is working. You can change this and recompile as you wish)
 6. `$CC $CFLAGS -c main.c -o main.o`
-7. `$LD $LDFLAGS main.o -o main -lc -lcompiler_rt -error-limit=0 -allow-undefined -entry=main` - The `-allow-undefined` just helps make this work easily for now. Eventually we'll want to figure out which symbols we expect to be undefined, list them in a file, and use `--allow-undefined-file=<value>`. We'll expect to define these symbols using javascript in the Module instantiation process, but more on this later.
+7. `$LD $LDFLAGS main.o -o main -lc -lcompiler_rt -error-limit=0 -allow-undefined -entry=main` - The `-allow-undefined` just helps make this work easily for now. Eventually we'll want to figure out which symbols we expect to be undefined, list them in a file, and use `--allow-undefined-file=<value>`. We'll expect to define these symbols using javascript in the Module instantiation process, but more on this later. The `-entry` flag essentially marks the file's `main` function. You need this for linking to be successful right now. If you wish you can actually define more top-level functions in main.c and call out to them in the javascript.
 8. spin up your lightweight server in this directory. If you have darkhttpd it's just `darkhttpd .`. hserv is very similar.
 9. open a browser and navigate to the local site! darkhttpd's should be `0.0.0.0:8080`. open developer tools, and refresh the page (I've rarely had errors on initial load that went away upon refresh). You should see the value returned by main in the console.
 10. alter `main.c`, recompile, and relink to your desire
