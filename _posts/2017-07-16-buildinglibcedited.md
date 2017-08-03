@@ -43,7 +43,7 @@ executing the following commands should build libc to wasm without having to ins
 5. `git clone git@gist.github.com:38b603136e59d07b87b9654869d9f45d.git && mv 38b603136e59d07b87b9654869d9f45d/Makefile ./Makefile && rm -rf 38b603136e59d07b87b9654869d9f45d` - This is a slightly adjusted Makefile from the WebGHC wasm-syslib-builder repo. It just hardcodes the installation prefix to be based off of `$WASMBUILDS` and adds an explicit reference to `$CFLAGS`. 
 6. `make` - builds the dependencies we want. If you don't care about watching things happend sequentially, and want things to go faster you can add the `-j <number of threads you desire> ` option.
 7. `make install` - puts the libc headers and archive in the libc directory
-8. `export CFLAGS=$CFLAGS"-I $WASMBUILDS/libc/include"` - add the libc headers to CC's search path. 
+8. `export CFLAGS=$CFLAGS" -I $WASMBUILDS/libc/include"` - add the libc headers to CC's search path. 
 9. `export LDFLAGS=$LDFLAGS" -L $WASMBUILDS/libc/lib"` - add libc.a's location to the linker search path
 
 ### Compiler-rt
