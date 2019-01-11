@@ -1,5 +1,10 @@
+---
+layout: default
+title: WebGHC
+---
+
 # Home
-Welcome to the WebGHC project site. Please, take a look around.  
+Welcome to the WebGHC project site. Please, take a look around.
 
 * [Project Design](/design)
 * [Roadmap](/roadmap)

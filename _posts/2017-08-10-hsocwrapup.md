@@ -1,8 +1,10 @@
 ---
 title: Summer of Haskell outcomes and the Road Ahead
 date: 2017-08-10 00:00:01
+layout: post
+author: Michael Vogelsang
 ---
-## Summer of Haskell Outcomes and the Road Ahead
+
 _The project term for Summer of Haskell is coming to a close. We'll go over where we're at, our expected upcoming progress and our plan for the future._ 
 
 ### Current Position

@@ -1,8 +1,10 @@
 ---
 title: If you build it... (revised 3 August 2017)
 date: 2017-07-25 00:00:01
+layout: post
+author: Michael Vogelsang
 ---
-## If you build it... (revised 3 August 2017)
+
 _GHC is directly dependent on some 'commonly available system resources'. Two of them are compiler-rt and libc. We'll cover how to build them to WebAssembly._  
 _With these two libraries available, we should be able to compile C code to runnable WebAssembly. We'll go over what the process looks like to compile C code and run it in the browser._
 

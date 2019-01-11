@@ -1,8 +1,10 @@
 ---
 title: A Gentle Introduction
 date: 2017-05-12 00:00:00
+layout: post
+author: Michael Vogelsang
 ---
-## A Gentle Introduction
+
 _In this post we'll explore what WebAssembly is, and why we want to bring Haskell to it._
 
 ### The Setup

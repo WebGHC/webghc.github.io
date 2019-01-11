@@ -1,8 +1,10 @@
 ---
 title: Learning from GHC
 date: 2017-05-12 00:00:01
+layout: post
+author: Michael Vogelsang
 ---
-## Learning from GHC
+
 _In this post we'll run some Haskell code manually, link some object files manually, and see what we can learn about GHC's inner workings from there._
 
 ### Introduction
