@@ -28,7 +28,7 @@ With so much working so well right now, I thought it'd be a good time to examine
 
 ---
 
-First things first, I want to clarify that WebGHC is *not* intended to be a fork or otherwise derivative of GHC. The prime directive of WebGHC thus far has been to ensure its upstream-ability within the next 1-3 years. This is one of the reasons why we kept the RTS model and the codegen, and used an ordinary musl libc as a system runtime. I believe upstreaming is critical to Haskell's success on WebAssembly, as it will help ensure its performance, stability, and maintainability.
+First things first, I want to explain that the prime directive of WebGHC thus far has been to ensure its upstream-ability. The WebGHC project aims to add a WebAssembly target to GHC's existing cross compilation infrastructure. We're trying to use as much of GHC's existing infrastructure as possible so that merging upstream eventually is likely, among several other advantages. This has had its good and bad parts, but as you'll see throughout this post, I think the advantages have greatly outweighed the drawbacks.
 
 With that in mind, here are some ways I think WebGHC currently needs improvement:
 
@@ -51,14 +51,14 @@ As for areas where I feel WebGHC is doing well:
 - JSaddle allows us to run a large portion of GHCJS applications on WebAssembly extremely easily. More on this later.
 - [`webabi`, our low level implementation of musl's syscall requirements](https://github.com/WebGHC/webabi), provides a fantastically modular and isolated runtime, so that high level concepts can remain in musl and GHC and get translated down into a bare bones ABI, just like they're used to on other platforms. It's a lot like a kernel. This ABI is fairly simple to implement, and can be totally isolated from the rest of the toolchain.
 
-So although WebGHC isn't as easy to use as I'd like, it functions superbly well, at least for something at such an early stage, and it's extremely compatible with existing Haskell code and GHC updates. I think these successes are largely due to our prime directive; we've reused code like the RTS, we've isolated out-of-band work like `webabi` and `jsaddle-wasm`, and we've kept the differences between WebGHC and other GHC targets to nearly zero. As a result, we've gotten all the existing advantages of everything we reused and stayed close to.
+So although WebGHC isn't as easy to use as I'd like, it functions superbly well, at least for something at such an early stage, and it's extremely compatible with existing Haskell code and GHC updates. I think these successes are largely due to our prime directive; we've reused code like the RTS, we've isolated out-of-band work like `webabi` and `jsaddle-wasm`, and we've kept the differences between WebGHC and other GHC targets to nearly zero. The maintainability of this approach has been a massive asset for our ability to continue work on WebGHC.
 
 ---
 
 A few other notes I feel I should mention:
 
 - Relative performance is as of yet untested. I have reasonable expectations that this will beat GHCJS in most cases based on some extremely crude preliminary testing, and it should skyrocket whenever we switch to the LLVM backend. But it is currently effectively unmeasured.
-- We conventionally use JSaddle for all JS interaction. This gives us instant compatibility with a *lot* of code written for GHCJS, like all of Reflex-DOM. This has a performance implication, in that we have to copy commands from a WebWorker back to the main thread to perform any JS calls, and copy responses back. But this has proven, at least on mobile devices with natively compiled Reflex-DOM, to be extremely negligible. It seems to me that this marshaling is extremely cheap compared to the actual DOM rendering the browser has to do following the command. I used the word "conventionally" because it's entirely possible to interact with JS more directly through the WebAssembly module system, but this is difficult and will require marshaling to reach the main thread anyway. Thus we have no plans to support the `JavaSciptFFI` extension.
+- We conventionally use JSaddle for all JS interaction. This gives us instant compatibility with a *lot* of code written for GHCJS, like all of Reflex-DOM. This has a performance implication, in that we have to copy commands from a WebWorker back to the main thread to perform any JS calls, and copy responses back. But this has proven, at least on mobile devices with natively compiled Reflex-DOM, to be extremely negligible. It seems to me that this marshaling is extremely cheap compared to the actual DOM rendering the browser has to do following the command. I used the word "conventionally" because it's entirely possible to interact with JS more directly through the WebAssembly module system, but this is difficult and will require marshaling to reach the main thread anyway. Thus we have no plans to support the `JavaSciptFFI` extension at this time.
 
 ---
 
