@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"></meta>
+    
+  </head>
+
+  <body>
+    <script src="jsaddle.js"></script>
+    <script src="jsbits/delegate.js"></script><script src="jsbits/diff.js"></script><script src="jsbits/isomorphic.js"></script><script src="jsbits/util.js"></script>
+    <script>
+      var jsaddleVals = jsaddleJsInit();
+      const worker = new Worker("worker_runner.js");
+      worker.postMessage({ url: "mario-opt"
+                         , jsaddleVals: jsaddleVals }
+                         , [jsaddleVals.jsaddleListener]);
+    </script>
+  </body>
+</html>
