@@ -13,7 +13,7 @@ I'm writing this now because WebGHC has recently reached a surprisingly usable s
 |-------------------:|:-----------------------------------------------------:|:----:|:------:|:------------------------------------------------------:|:----:|:------:|:------:|
 | **reflex-todomvc** | [link](/examples/2019-01-18/wasm-app-reflex-todomvc/) | 8.8M | 1.9M   | [link](/examples/2019-01-18/ghcjs-app-reflex-todomvc/) | 5.2M | 346K   | Reflex |
 | **drag-and-drop**  | [link](/examples/2019-01-18/wasm-app-draganddrop/)    | 7.5M | 1.7M   | [link](/examples/2019-01-18/ghcjs-app-draganddrop/)    | 3.8M | 245K   | Reflex |
-| **keyboard**       | [link](/examples/2019-01-18/wasm-app-keyboard/)       | 7.4M | 1.7M   | [link](/examples/2019-01-18/ghcjs-app-keyboard/)       | 3.8M | 240M   | Reflex |
+| **keyboard**       | [link](/examples/2019-01-18/wasm-app-keyboard/)       | 7.4M | 1.7M   | [link](/examples/2019-01-18/ghcjs-app-keyboard/)       | 3.8M | 240K   | Reflex |
 | **nasa-pod**       | [link](/examples/2019-01-18/wasm-app-nasapod/)        | 8.6M | 1.9M   | [link](/examples/2019-01-18/ghcjs-app-nasapod/)        | 5.6M | 381K   | Reflex |
 | **othello**        | [link](/examples/2019-01-18/wasm-app-othello/)        | 8.6M | 1.8M   | [link](/examples/2019-01-18/ghcjs-app-othello/)        | 5.1M | 332K   | Reflex |
 | **todo-mvc**       | [link](/examples/2019-01-18/wasm-app-todo-mvc/)       | 5.4M | 1.4M   | [link](/examples/2019-01-18/ghcjs-app-todo-mvc/)       | 2.2M | 255K   | Miso   |
